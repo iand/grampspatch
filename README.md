@@ -34,7 +34,8 @@ This is an early release. Use with caution.
 
 A command that changes a tree:
 
-1. Opens the Gramps database directory read-only with gogramps.
+1. Opens the Gramps database directory read-only with gogramps, and creates the
+   patch with the tree's database version.
 2. Reads each object to change twice: as a typed value and as its stored
    `json_data`, with `Database.GetJSON`.
 3. Modifies a copy of the typed value.
@@ -45,7 +46,7 @@ A command that changes a tree:
 6. Writes the patch with `WriteFile`.
 
 ```Go
-p := grampspatch.New(grampspatch.Schema180, "Add MyHeritage matches for T00000")
+p := grampspatch.New(db.SchemaVersion(), "Add MyHeritage matches for T00000")
 
 ops, err := grampspatch.Diff(stored, before, after)
 if err != nil {
@@ -78,7 +79,7 @@ to Already applied.
 
 | Method      | Behaviour                                                                                                     |
 | ----------- | ------------------------------------------------------------------------------------------------------------- |
-| `New`       | Sets `Schema` and `Message`; `Created` is set to the current time.                                            |
+| `New`       | Sets `DBVersion` and `Message`; `Created` is set to the current time.                                         |
 | `Add`       | Marshals `obj`; returns an error when its `_class` differs from `class` or its `handle` differs from `handle`. |
 | `Update`    | Returns an error when `ops` is empty, or when an operation addresses a forbidden path (FORMAT §5).            |
 | `Delete`    | Always writes `expect_change`.                                                                                |
@@ -91,9 +92,19 @@ to Already applied.
 members that change, and `expect_change` would make any unrelated edit to the
 object a Conflict.
 
-`Schema172` (Gramps 6.1) and `Schema180` (the dna-core development branch) name
-the schema versions for the envelope. `ClassPerson` through `ClassDNAMatch` name
-the primary object classes used in change entries.
+The envelope's `db_version` is the database schema version of the tree the patch
+is written against, not the Gramps XML version (FORMAT §2). The addon rejects a
+patch whose version is newer than the open tree's. `Database.SchemaVersion` in
+gogramps returns the value for a tree, and these constants name known versions:
+
+| Constant       | `db_version` | Gramps                   |
+| -------------- | ------------ | ------------------------ |
+| `DBVersion60`  | 21           | 6.0                      |
+| `DBVersion61`  | 22           | 6.1                      |
+| `DBVersionDNA` | 23           | master, with DNA objects |
+
+`ClassPerson` through `ClassDNAMatch` name the primary object classes used in
+change entries.
 
 ### Op constructors
 

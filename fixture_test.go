@@ -25,7 +25,7 @@ func TestFixture(t *testing.T) {
 		t.Fatalf("decoding fixture: unexpected error: %v", err)
 	}
 
-	p := New(Schema180, "GrampsPatch DNA fixture")
+	p := New(DBVersionDNA, "GrampsPatch DNA fixture")
 	p.Created = time.Unix(1790000000, 0)
 	if err := p.Add(ClassDNATest, "GPFIXDNATEST0000001", fixture.Changes[0].Object); err != nil {
 		t.Fatalf("Add DNATest: unexpected error: %v", err)

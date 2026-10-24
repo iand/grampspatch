@@ -14,10 +14,11 @@ import (
 	"time"
 )
 
-// Schema versions for the Patch envelope.
+// Database versions for the Patch envelope.
 const (
-	Schema172 = "1.7.2" // Schema172 is the Gramps 6.1 XML schema version.
-	Schema180 = "1.8.0" // Schema180 is the dna-core development branch XML schema version.
+	DBVersion60  = 21 // DBVersion60 is the Gramps 6.0 database version.
+	DBVersion61  = 22 // DBVersion61 is the Gramps 6.1 database version.
+	DBVersionDNA = 23 // DBVersionDNA is the database version of Gramps master with DNA objects.
 )
 
 // Primary object class names used in change entries.
@@ -41,9 +42,9 @@ const formatVersion = 1
 
 // Patch holds the envelope and change entries of one patch file.
 type Patch struct {
-	Schema  string    // Schema is the Gramps XML schema version of the tree the patch is written against.
-	Message string    // Message is the description of the change shown in the Gramps undo history.
-	Created time.Time // Created is the time the patch was written.
+	DBVersion int       // DBVersion is the database schema version of the tree the patch is written against.
+	Message   string    // Message is the description of the change shown in the Gramps undo history.
+	Created   time.Time // Created is the time the patch was written.
 
 	changes []change
 	handles map[string]bool
@@ -62,19 +63,19 @@ type change struct {
 // envelope is the top-level object of a patch file.
 type envelope struct {
 	GrampsPatch int      `json:"gramps_patch"`
-	Schema      string   `json:"schema"`
+	DBVersion   int      `json:"db_version"`
 	Message     string   `json:"message,omitempty"`
 	Created     int64    `json:"created"`
 	Changes     []change `json:"changes"`
 }
 
-// New returns an empty patch for the given schema version and message.
-func New(schema, message string) *Patch {
+// New returns an empty patch for the given database version and message.
+func New(dbVersion int, message string) *Patch {
 	return &Patch{
-		Schema:  schema,
-		Message: message,
-		Created: time.Now(),
-		handles: map[string]bool{},
+		DBVersion: dbVersion,
+		Message:   message,
+		Created:   time.Now(),
+		handles:   map[string]bool{},
 	}
 }
 
@@ -173,7 +174,7 @@ func (p *Patch) append(c change) {
 func (p *Patch) Encode(w io.Writer) error {
 	env := envelope{
 		GrampsPatch: formatVersion,
-		Schema:      p.Schema,
+		DBVersion:   p.DBVersion,
 		Message:     p.Message,
 		Created:     p.Created.Unix(),
 		Changes:     p.changes,

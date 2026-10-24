@@ -28,7 +28,7 @@ func mustOp(t *testing.T) func(op Op, err error) Op {
 }
 
 func TestEncodeEnvelope(t *testing.T) {
-	p := New(Schema180, "Add things")
+	p := New(DBVersionDNA, "Add things")
 	p.Created = time.Unix(1790000000, 0)
 	if err := p.Add(ClassNote, "N1", testObject(ClassNote, "N1")); err != nil {
 		t.Fatalf("Add: unexpected error: %v", err)
@@ -48,7 +48,8 @@ func TestEncodeEnvelope(t *testing.T) {
 
 	var env struct {
 		GrampsPatch *int              `json:"gramps_patch"`
-		Schema      string            `json:"schema"`
+		DBVersion   *int              `json:"db_version"`
+		Schema      *string           `json:"schema"`
 		Message     string            `json:"message"`
 		Created     *int64            `json:"created"`
 		Changes     []json.RawMessage `json:"changes"`
@@ -59,8 +60,11 @@ func TestEncodeEnvelope(t *testing.T) {
 	if env.GrampsPatch == nil || *env.GrampsPatch != 1 {
 		t.Errorf("gramps_patch = %v, want 1", env.GrampsPatch)
 	}
-	if env.Schema != "1.8.0" {
-		t.Errorf("schema = %q, want %q", env.Schema, "1.8.0")
+	if env.DBVersion == nil || *env.DBVersion != 23 {
+		t.Errorf("db_version = %v, want 23", env.DBVersion)
+	}
+	if env.Schema != nil {
+		t.Errorf("schema = %q, want no schema member", *env.Schema)
 	}
 	if env.Message != "Add things" {
 		t.Errorf("message = %q, want %q", env.Message, "Add things")
@@ -75,7 +79,7 @@ func TestEncodeEnvelope(t *testing.T) {
 
 func TestEncodeDeterministic(t *testing.T) {
 	build := func() []byte {
-		p := New(Schema180, "m")
+		p := New(DBVersionDNA, "m")
 		p.Created = time.Unix(1790000000, 0)
 		obj := testObject(ClassNote, "N1")
 		obj["text"] = "a < b & c"
@@ -100,7 +104,7 @@ func TestEncodeDeterministic(t *testing.T) {
 func TestChangeEntries(t *testing.T) {
 	op := mustOp(t)(Replace("/page", "x"))
 
-	p := New(Schema180, "m")
+	p := New(DBVersionDNA, "m")
 	if err := p.Add(ClassDNATest, "T1", testObject(ClassDNATest, "T1")); err != nil {
 		t.Fatalf("Add: unexpected error: %v", err)
 	}
@@ -176,7 +180,7 @@ func TestChangeErrors(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			p := New(Schema180, "m")
+			p := New(DBVersionDNA, "m")
 			if err := p.Add(ClassNote, "DUP", testObject(ClassNote, "DUP")); err != nil {
 				t.Fatalf("Add: unexpected error: %v", err)
 			}
@@ -191,7 +195,7 @@ func TestChangeErrors(t *testing.T) {
 }
 
 func TestWriteFile(t *testing.T) {
-	p := New(Schema180, "m")
+	p := New(DBVersionDNA, "m")
 	if err := p.Add(ClassNote, "N1", testObject(ClassNote, "N1")); err != nil {
 		t.Fatalf("Add: unexpected error: %v", err)
 	}

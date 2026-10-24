@@ -1,6 +1,6 @@
 {
   "gramps_patch": 1,
-  "schema": "1.8.0",
+  "db_version": 23,
   "message": "GrampsPatch DNA fixture",
   "created": 1790000000,
   "changes": [
